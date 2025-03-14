@@ -2,14 +2,17 @@ import openai
 import time
 import os
 import random
+from dotenv import load_dotenv
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from webdriver_manager.chrome import ChromeDriverManager
 
-# OpenAI API Setup
+# Load environment variables from .env file
+load_dotenv()
 
+# OpenAI API Setup
 client = openai.OpenAI(api_key=str(os.getenv("OPENAI_API_KEY")))
 
 # Selenium Chrome Setup
@@ -27,14 +30,11 @@ driver.get(QUIZ_URL)
 
 # Function to ask OpenAI for correct answers
 def get_correct_answer(question, options):
-    prompt = f"""You are an AI assistant helping to answer multiple-choice questions.
-    Given the following question and choices, return only the correct answer letter.
-
-    Question: {question}
-    Choices:
-    {options}
-
-    Respond ONLY with the correct answer letter (e.g., 'a', 'b', 'c', or 'd')."""
+    system_role = os.getenv("SYSTEM_ROLE") # instructions hidden for security
+    prompt = f"""
+    Question: {question}.
+    Choices: {options}.
+    """
 
     print("\n🔹 Asking OpenAI:")
     print(f"  Question: {question}")
@@ -43,7 +43,7 @@ def get_correct_answer(question, options):
     try:
         response = client.chat.completions.create(
             model="gpt-4o",
-            messages=[{"role": "system", "content": "You are a knowledgeable assistant."},
+            messages=[{"role": "system", "content": system_role},
                       {"role": "user", "content": prompt}],
             temperature=0,
             max_tokens=5
